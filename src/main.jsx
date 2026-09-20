@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {Github, Linkedin, Mail, ExternalLink, Terminal, Cpu, Cloud, Database, Network, Bot, GraduationCap, Award, ChevronRight, Copy, Check, Menu, X} from 'lucide-react';
 import './styles.css';
@@ -73,7 +73,14 @@ function TerminalLine({children, prompt=true}){return <div className="term-line"
 function Section({id,command,children}){return <section id={id} className="section"><div className="section-cmd"><span className="prompt">ashwini@principal-engineer:~$</span> {command}</div>{children}</section>}
 function App(){
  const [cmd,setCmd]=useState(''); const [history,setHistory]=useState([]); const [mobile,setMobile]=useState(false); const [copied,setCopied]=useState(false);
+ const cmdInputRef=useRef(null); const consoleRef=useRef(null);
  const run=(raw)=>{const c=raw.trim().toLowerCase(); if(!c)return; if(c==='clear'){setHistory([]);setCmd('');return;} setHistory(h=>[...h,{input:raw,output:commands[c]||[`command not found: ${raw}`,`Type 'help' to see available commands.`]}]);setCmd('')};
+ useEffect(()=>{
+  const el=consoleRef.current; if(!el)return;
+  const io=new IntersectionObserver(([entry])=>{if(entry.isIntersecting)cmdInputRef.current?.focus()},{threshold:0.5});
+  io.observe(el);
+  return ()=>io.disconnect();
+ },[]);
  const nav=['about','experience','projects','skills','education','contact'];
  const copyEmail=()=>{navigator.clipboard?.writeText(profile.email);setCopied(true);setTimeout(()=>setCopied(false),1600)};
  return <div className="app">
@@ -98,7 +105,7 @@ function App(){
    <Section id="skills" command="cat ./stack.json"><div className="skills-grid">{Object.entries(skills).map(([k,v])=><article className="skill" key={k}><h3><span>{'{'} </span>{k}<span> {'}'}</span></h3><div>{v.map(x=><span key={x}>{x}</span>)}</div></article>)}</div></Section>
    <Section id="education" command="cat ./education.txt"><div className="education"><GraduationCap/><div><h3>B.E.</h3><p>Siddaganga Institute of Technology</p><small>Visvesvaraya Technological University</small></div></div><div className="awards"><Award/><div><h3>Recognition</h3><p>1st Place — Organizational Hackathon for a GenAI-powered Incident Management Assistant.</p><p>Additional awards received in 2016, 2017, 2018 and 2019 for enhancement, infrastructure design and application development work.</p></div></div></Section>
    <Section id="contact" command="./connect.sh"><div className="contact"><div><h2>Let’s build something that scales.</h2><p>Open to conversations around principal engineering, distributed systems, platform architecture, observability and AI-assisted engineering.</p></div><div className="contact-links"><a href={`mailto:${profile.email}`}><Mail/> {profile.email}</a><a href={profile.linkedin} target="_blank" rel="noreferrer"><Linkedin/> LinkedIn <ExternalLink size={14}/></a><a href={profile.github} target="_blank" rel="noreferrer"><Github/> GitHub <ExternalLink size={14}/></a></div></div></Section>
-   <section className="terminal-console"><div className="console-title"><span>interactive shell</span><span>type <b>help</b></span></div><div className="console-body"><TerminalLine>help</TerminalLine><div className="help-grid">{commands.help.map(c=><button key={c} onClick={()=>{if(c==='clear')setHistory([]);else run(c)}}>{c}</button>)}</div>{history.map((h,i)=><div className="history" key={i}><TerminalLine>{h.input}</TerminalLine>{h.output.map((x,j)=><div className="output" key={j}>{x}</div>)}</div>)}<form onSubmit={e=>{e.preventDefault();run(cmd)}} className="command-form"><span className="prompt">ashwini@principal-engineer:~$</span><input autoComplete="off" value={cmd} onChange={e=>setCmd(e.target.value)} aria-label="Terminal command"/></form></div></section>
+   <section className="terminal-console" ref={consoleRef}><div className="console-title"><span>interactive shell</span><span>type <b>help</b></span></div><div className="console-body"><TerminalLine>help</TerminalLine><div className="help-grid">{commands.help.map(c=><button key={c} onClick={()=>{if(c==='clear')setHistory([]);else run(c)}}>{c}</button>)}</div>{history.map((h,i)=><div className="history" key={i}><TerminalLine>{h.input}</TerminalLine>{h.output.map((x,j)=><div className="output" key={j}>{x}</div>)}</div>)}<form onSubmit={e=>{e.preventDefault();run(cmd)}} className="command-form"><span className="prompt-line"><span className="prompt">ashwini@principal-engineer:~$</span><span className="cursor"/></span><input ref={cmdInputRef} autoComplete="off" value={cmd} onChange={e=>setCmd(e.target.value)} aria-label="Terminal command"/></form></div></section>
   </main><footer><span>Ashwini Agarwal {new Date().getFullYear()}</span></footer>
  </div>
 }
