@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ashwini-portfolio-1311.vercel.app/sitemap.xml
